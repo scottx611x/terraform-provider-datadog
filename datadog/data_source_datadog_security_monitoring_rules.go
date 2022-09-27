@@ -207,22 +207,23 @@ func buildSecurityMonitoringTfRule(rule datadogV2.SecurityMonitoringRuleResponse
 	tfQueries := make([]map[string]interface{}, len(rule.GetQueries()))
 	for i, query := range rule.GetQueries() {
 		tfQuery := make(map[string]interface{})
-		if aggregation, ok := query.GetAggregationOk(); ok {
+		ddQuery := query.SecurityMonitoringStandardRuleQuery
+		if aggregation, ok := ddQuery.GetAggregationOk(); ok {
 			tfQuery["aggregation"] = string(*aggregation)
 		}
-		if distinctFields, ok := query.GetDistinctFieldsOk(); ok {
+		if distinctFields, ok := ddQuery.GetDistinctFieldsOk(); ok {
 			tfQuery["distinct_fields"] = *distinctFields
 		}
-		if groupByFields, ok := query.GetGroupByFieldsOk(); ok {
+		if groupByFields, ok := ddQuery.GetGroupByFieldsOk(); ok {
 			tfQuery["group_by_fields"] = *groupByFields
 		}
-		if metric, ok := query.GetMetricOk(); ok {
+		if metric, ok := ddQuery.GetMetricOk(); ok {
 			tfQuery["metric"] = *metric
 		}
-		if name, ok := query.GetNameOk(); ok {
+		if name, ok := ddQuery.GetNameOk(); ok {
 			tfQuery["name"] = *name
 		}
-		tfQuery["query"] = query.GetQuery()
+		tfQuery["query"] = ddQuery.GetQuery()
 		tfQueries[i] = tfQuery
 	}
 	tfRule["query"] = tfQueries

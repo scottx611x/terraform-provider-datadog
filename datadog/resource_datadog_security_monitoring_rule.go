@@ -2,7 +2,6 @@ package datadog
 
 import (
 	"context"
-
 	"github.com/terraform-providers/terraform-provider-datadog/datadog/internal/utils"
 	"github.com/terraform-providers/terraform-provider-datadog/datadog/internal/validators"
 
@@ -323,7 +322,7 @@ func resourceDatadogSecurityMonitoringRuleCreate(ctx context.Context, d *schema.
 }
 
 func buildCreatePayload(d *schema.ResourceData) (datadogV2.SecurityMonitoringRuleCreatePayload, error) {
-	payload := datadogV2.SecurityMonitoringRuleCreatePayload{}
+	payload := datadogV2.SecurityMonitoringStandardRuleCreatePayload{}
 	payload.Cases = buildCreatePayloadCases(d)
 
 	payload.IsEnabled = d.Get("enabled").(bool)
@@ -357,11 +356,11 @@ func buildCreatePayload(d *schema.ResourceData) (datadogV2.SecurityMonitoringRul
 		if ruleType, err := datadogV2.NewSecurityMonitoringRuleTypeCreateFromValue(v.(string)); err == nil {
 			payload.Type = ruleType
 		} else {
-			return payload, err
+			return datadogV2.SecurityMonitoringStandardRuleCreatePayloadAsSecurityMonitoringRuleCreatePayload(&payload), err
 		}
 	}
 
-	return payload, nil
+	return datadogV2.SecurityMonitoringStandardRuleCreatePayloadAsSecurityMonitoringRuleCreatePayload(&payload), nil
 }
 
 func buildCreatePayloadCases(d *schema.ResourceData) []datadogV2.SecurityMonitoringRuleCaseCreate {
@@ -486,12 +485,12 @@ func extractMapFromInterface(tfOptionsList []interface{}) map[string]interface{}
 	return tfOptions
 }
 
-func buildCreatePayloadQueries(d *schema.ResourceData) []datadogV2.SecurityMonitoringRuleQueryCreate {
+func buildCreatePayloadQueries(d *schema.ResourceData) []datadogV2.SecurityMonitoringStandardRuleQueryCreate {
 	tfQueries := d.Get("query").([]interface{})
-	payloadQueries := make([]datadogV2.SecurityMonitoringRuleQueryCreate, len(tfQueries))
+	payloadQueries := make([]datadogV2.SecurityMonitoringStandardRuleQueryCreate, len(tfQueries))
 	for idx, tfQuery := range tfQueries {
 		query := tfQuery.(map[string]interface{})
-		payloadQuery := datadogV2.SecurityMonitoringRuleQueryCreate{}
+		payloadQuery := datadogV2.SecurityMonitoringStandardRuleQueryCreate{}
 
 		if v, ok := query["aggregation"]; ok {
 			aggregation := datadogV2.SecurityMonitoringRuleQueryAggregation(v.(string))
@@ -615,7 +614,7 @@ func updateResourceDataFromResponse(d *schema.ResourceData, ruleResponse datadog
 	ruleQueries := make([]map[string]interface{}, len(ruleResponse.GetQueries()))
 	for idx := range ruleResponse.GetQueries() {
 		ruleQuery := make(map[string]interface{})
-		responseRuleQuery := ruleResponse.GetQueries()[idx]
+		responseRuleQuery := ruleResponse.GetQueries()[idx].SecurityMonitoringStandardRuleQuery
 
 		if aggregation, ok := responseRuleQuery.GetAggregationOk(); ok {
 			ruleQuery["aggregation"] = *aggregation
@@ -774,7 +773,7 @@ func buildUpdatePayload(d *schema.ResourceData) datadogV2.SecurityMonitoringRule
 		payloadQueries := make([]datadogV2.SecurityMonitoringRuleQuery, len(tfQueries))
 		for idx, tfQuery := range tfQueries {
 			query := tfQuery.(map[string]interface{})
-			payloadQuery := datadogV2.SecurityMonitoringRuleQuery{}
+			payloadQuery := datadogV2.SecurityMonitoringStandardRuleQuery{}
 
 			if v, ok := query["aggregation"]; ok {
 				aggregation := datadogV2.SecurityMonitoringRuleQueryAggregation(v.(string))
@@ -821,7 +820,7 @@ func buildUpdatePayload(d *schema.ResourceData) datadogV2.SecurityMonitoringRule
 			queryQuery := query["query"].(string)
 			payloadQuery.Query = &queryQuery
 
-			payloadQueries[idx] = payloadQuery
+			payloadQueries[idx] = datadogV2.SecurityMonitoringStandardRuleQueryAsSecurityMonitoringRuleQuery(&payloadQuery)
 		}
 		payload.Queries = payloadQueries
 	}
