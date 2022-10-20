@@ -160,6 +160,9 @@ func getGroupBys(d *schema.ResourceData) ([]datadogV2.LogsMetricGroupBy, error) 
 	groupBys := make([]datadogV2.LogsMetricGroupBy, len(resourceGroupBys))
 
 	for i, v := range resourceGroupBys {
+		if v == nil {
+			continue
+		}
 		resourceGroupBy := v.(map[string]interface{})
 		groupBy := datadogV2.NewLogsMetricGroupByWithDefaults()
 		if path, ok := resourceGroupBy["path"]; ok {
